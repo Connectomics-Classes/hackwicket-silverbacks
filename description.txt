@@ -1,1 +1,3 @@
-Our group intends to create an algorithm for the automatic segmentation of mitochondria from EM connectome data. We intend to employ computer vision techniques succh as canny detection, image segmentation, texture detection, and machine learning to accomplish this goal.
+Our group intends to create an algorithm for the automatic segmentation of mitochondria from
+EM connectome data. We intend to employ computer vision techniques succh as canny detection,
+image segmentation, texture detection, and machine learning to accomplish this goal.
