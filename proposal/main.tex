@@ -1,0 +1,41 @@
+\documentclass[a4paper]{article}
+
+\usepackage[english]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage[colorinlistoftodos]{todonotes}
+
+\title{Hackwicket Silverbacks}
+
+\author{Brandon Duderstadt, Ryan Marren, Eric Huang}
+
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+
+Connectomics is a rapidly growing field with a large amount of data to be processed. However the image volume data is cluttered with mitochondria. We intend to use machine learning and computer vision techniques such as Canny detection, contour detection, and texture identification to create an autonomous algorithm to identify these mitochondria. Once identified, the data can be further processed and used in other research capacities.
+
+\section{Project Outline}
+\subsection{Methods}
+We are starting our project by applying research that has already been done on the subject, such as that of Lucci, Smith, Achanta, Knott, and Fua. We would also like to include mitochondria deteciton work done in ilastik, and essentially write algorithms leveraging the probability map exported by ilastic to create "pretty" segmented graphs with identified mitochondria. Addiionaly, we would like to explore new supervoxel algorithm advances in order to attempt to improve the base algorithms.
+
+\subsection{Schedule}
+The weekly breakdown is as follows:
+\begin{enumerate}
+	\item Identify project, theorize possible solutions
+    \item Begin testing theorized solutions and training algorithm, begin poster, by Thursday of this week have some kind of semi-working algorithm
+    \item Finish training algorithm and assess sustainability of algorithm, finish poster
+\end{enumerate}
+
+\subsection{Allocation of Tasks}
+\subsubsection{Brandon}
+"Prettying up data" from ilastik and using morphographics in order to create a segmentation algorithm
+\subsubsection{Ryan}
+Assess implications of supervoxel algorithms \& explore advances in base detection algorithms
+\subsubsection{Eric}
+Assist with graphics and creation of materials such as poster \& final write up.
+\end{document}
