@@ -1,4 +1,5 @@
 from skimage import draw, measure, segmentation, util, color
+import sys
 import numpy as np
 import ndio.convert.png
 import ndio.remote.OCP as OCP
@@ -72,9 +73,13 @@ def extract_features(img, labels):
     props = measure.regionprops(labels, intensity_image = img)
     X = np.empty([n_samples, n_features])
     for i in range(labels.max()):
-        X[i][0] = props[i]['mean_intensity'] 
-        X[i][1] = props[i]['area']
-        X[i][2] = props[i]['equivalent_diameter']
+        tmp = props[i]
+        X[i][0] = tmp['mean_intensity'] 
+        X[i][1] = tmp['area']
+        if props[i]['minor_axis_length'] != 0:
+            X[i][2] = tmp['major_axis_length'] / tmp['minor_axis_length']
+        else:
+            X[i][2] = 0
     return X
 
 def extract_classes(truth, labels):
@@ -98,25 +103,26 @@ def main():
     n_cols = len(mito_img[0][0])
 
     print "Initializing oversegmentation / threshold cutting algorithm..."
-    n_segments = 8000 # (approx) the number of superpixels from SLIC
-    compactness = .2 # how much SLIC favors shape vs color (high = more square)
-    threshold = .1 # gradient threshold for threshold cut
+    n_segments = int(sys.argv[1]) # (approx) the number of superpixels from SLIC
+    compactness = float(sys.argv[2]) # how much SLIC favors shape vs color (high = more square)
+    threshold = float(sys.argv[3]) # gradient threshold for threshold cut
+
     labels = smartDownSample(mito_img[70], n_segments, compactness, threshold) 
     p_labels = smartDownSample(mito_img[71], n_segments, compactness, threshold)
     demo(mito_img[70], n_segments, compactness, threshold)
     print "Processing features..."
     X_train = extract_features(mito_img[70], labels)
     y_train = extract_classes(mito_anno[70], labels)
-    X_test = extract_features(mito_img[71], labels)
+    X_test = extract_features(mito_img[71], p_labels)
     print "Initializing random forest..."
     forest = skl.RandomForestClassifier(max_depth = 10)
     print "Learning random forest..."
     forest.fit(X_train, y_train)
     print "Making predictions..."
     y_pred = forest.predict(X_test)
-    y_pred_img = np.empty(mito_img[70].shape)
+    y_pred_img = np.empty(mito_anno[70].shape)
     for index in np.ndindex(y_pred_img.shape):
-        y_pred_img[index] = y_pred[p_labels[index]]
+        y_pred_img[index] = y_pred[p_labels[index] - 1]
     y_pred_img[ y_pred_img > 0 ] = 255 
     print "Showing true img..."
     toimage(mito_img[71]).show()
