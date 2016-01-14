@@ -5,6 +5,8 @@ import numpy as np
 import cv
 import cv2
 import sys
+from mayavi import mlab
+from mayavi.mlab import *
 
 #load the numpy into the program
 originalData = np.load('../data/test.npy')
@@ -13,6 +15,7 @@ originalData = np.load('../data/test.npy')
 ######this is for erosion & dilation with the trackbar
 def nothing(x):
 	pass
+
 #get the data into a usable form
 testArr = originalData[0, :, :, 1]
 testArr = testArr.copy()
@@ -33,6 +36,20 @@ while(1):
 	#turn decimals to percentages
 	restrictedArr = cv2.inRange(dilatedArr, cv2.getTrackbarPos('lowRange', 'filterMenu')/100., cv2.getTrackbarPos('highRange', 'filterMenu')/100.)
 	cv2.imshow('testImg',restrictedArr)
-	cv2.waitKey(0)
+	if(cv2.waitKey(25) == ord('a')):
+		break
+#this is where images would get stitched together
+
+#display images
+newArr = restrictedArr.copy()
+newArr[newArr > 0] = 100
+#add the z dim
+dispArr = newArr[:,:,np.newaxis]
+print dispArr.shape
+#test display
+
+mlab.contour3d(dispArr)
+mlab.show()
+		
 
 
