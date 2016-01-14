@@ -20,6 +20,9 @@ testArr = testArr.copy()
 cv2.namedWindow('filterMenu')
 cv2.createTrackbar('erosion','filterMenu',1,255, nothing)
 cv2.createTrackbar('dilation','filterMenu',1,255, nothing)
+#apply threshold filtering
+cv2.createTrackbar('lowRange','filterMenu',1, 100, nothing)
+cv2.createTrackbar('highRange','filterMenu',100, 100, nothing)
 while(1):
 	ero = cv2.getTrackbarPos('erosion','filterMenu')
 	dil = cv2.getTrackbarPos('dilation', 'filterMenu')
@@ -27,7 +30,9 @@ while(1):
 	erodedArr = cv2.erode(testArr, kernel)
 	kernel = np.ones((dil,dil), np.uint8)
 	dilatedArr = cv2.dilate(erodedArr, kernel)
-	cv2.imshow('testImg', dilatedArr)
+	#turn decimals to percentages
+	restrictedArr = cv2.inRange(dilatedArr, cv2.getTrackbarPos('lowRange', 'filterMenu')/100., cv2.getTrackbarPos('highRange', 'filterMenu')/100.)
+	cv2.imshow('testImg',restrictedArr)
 	cv2.waitKey(0)
 
 
