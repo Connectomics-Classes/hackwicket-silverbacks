@@ -9,7 +9,7 @@ def getRaw(ndio = False):
         return ndio.convert.png.import_png_collection('data/mito_img_*')
     else:
         oo = OCP()
-        return oo.get_cutout('kasthuri11cc', 'image', 694 + 538, 694 + 844, 1750 + 360, 1750 + 520, 1004, 1154, resolution = 3)
+        return oo.get_cutout('kasthuri11cc', 'image', 694, 1794, 1750, 2640, 1004, 1154, resolution=3)
 
 def getTruth(ndio = False):
     # Careful of hardcoded filepath    
