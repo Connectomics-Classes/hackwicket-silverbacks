@@ -7,6 +7,7 @@ import sklearn.ensemble as skl
 from skimage.future import graph
 from scipy.misc import toimage
 import rag2 as graph_custom # edited skimage.future.graph module
+import cutImageNAnnotations as cutImg
 
 def demo(img, nsegs, compactness, threshold):
     # Segment using SLIC
@@ -56,6 +57,17 @@ def smartDownSample(vol, nsegs, compactness, threshold):
     return label_vol.astype('uint8')
 
 
+def getConfig():
+	"""Returns x-min,x-max,y-min,y-max in tuple form in respective order"""
+	try:
+		import config
+		return (config.X_MIN, config.X_MAX, config.Y_MIN, config.Y_MAX)
+	except ImportError:
+		maxes = cutImg.getCutValues()
+		cutImg.writeConfig(maxes) #creates config.py
+		return maxes
+		
+
 def getRaw(db = False):
     # Careful of hardcoded filepath    
     if db == False:
@@ -65,8 +77,10 @@ def getRaw(db = False):
             vol = np.dstack([vol, img]) if vol.size else img
         return vol
     else:
-        oo = OCP()
-        return oo.get_cutout('kasthuri11cc', 'image', 694 + 538, 694 + 844, 1750 + 360, 1750 + 520, 1004, 1154, resolution = 3)
+		boundaries = getConfig()
+		oo = OCP()
+		#added +12 because first 10 images in stack aren't even annotated
+		return oo.get_cutout('kasthuri11cc', 'image', 694 + boundaries[0], 694 + boundaries[1], 1750 + boundaries[2], 1750 + boundaries[3], 1004+13, 1154, resolution = 3) 
 
 
 def getTruth(db = False):
@@ -78,8 +92,10 @@ def getTruth(db = False):
             vol = np.dstack([vol, img]) if vol.size else img
         return vol
     else:
-        oo = OCP()
-        return oo.get_cutout('kasthuri2015_ramon_v1', 'mitochondria', 694 + 538, 694 + 844, 1750 + 360, 1750 + 520, 1004, 1154, resolution = 3)
+		boundaries = getConfig()
+		oo = OCP()
+		#added +12 because first 10 images in stack aren't even annotated
+		return oo.get_cutout('kasthuri2015_ramon_v1', 'mitochondria', 694 + boundaries[0], 694 + boundaries[1], 1750 + boundaries[2], 1750 + boundaries[3], 1004+13, 1154, resolution = 3)
 
 
 def extract_features(im_vol, label_vol):
