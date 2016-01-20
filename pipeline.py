@@ -1,5 +1,5 @@
 from skimage import draw, measure, segmentation, util, color, exposure
-import sys
+import sys, random
 import numpy as np
 import ndio.convert.png
 import ndio.remote.OCP as OCP
@@ -56,26 +56,34 @@ def smartDownSample(vol, nsegs, compactness, threshold):
     return label_vol.astype('uint8')
 
 
-def getRaw(ndio = False):
+def getRaw(db = False):
     # Careful of hardcoded filepath    
-    if ndio == False:
-        return ndio.convert.png.import_png_collection('data/mito_img_*')
+    if db == False:
+        vol = np.array([])
+        data = ndio.convert.png.import_png_collection('newdata/mito_data_*')
+        for img in data:
+            vol = np.dstack([vol, img]) if vol.size else img
+        return vol
     else:
         oo = OCP()
         return oo.get_cutout('kasthuri11cc', 'image', 694 + 538, 694 + 844, 1750 + 360, 1750 + 520, 1004, 1154, resolution = 3)
 
 
-def getTruth(ndio = False):
+def getTruth(db = False):
     # Careful of hardcoded filepath    
-    if ndio == False:
-        return ndio.convert.png.import_png_collection('data/mito_anno_*')
+    if db == False:
+        vol = np.array([])
+        data = ndio.convert.png.import_png_collection('newdata/mito_anno_*')
+        for img in data:
+            vol = np.dstack([vol, img]) if vol.size else img
+        return vol
     else:
         oo = OCP()
         return oo.get_cutout('kasthuri2015_ramon_v1', 'mitochondria', 694 + 538, 694 + 844, 1750 + 360, 1750 + 520, 1004, 1154, resolution = 3)
 
 
 def extract_features(im_vol, label_vol):
-    n_features = 3
+    n_features = 4
     X = np.array([])
     if len(im_vol) != len(label_vol):
         print 'volumes not the same z dimension'
@@ -86,11 +94,9 @@ def extract_features(im_vol, label_vol):
         for j in range(1, label_vol[i].max()):
             tmp = props[j-1]
             tX[j-1][0] = tmp['mean_intensity'] 
-            tX[j-1][1] = tmp['area']
-            if tmp['minor_axis_length'] != 0:
-                tX[j-1][2] = tmp['major_axis_length'] / tmp['minor_axis_length']
-            else:
-                tX[j-1][2] = 0
+            tX[j-1][1] = tmp['eccentricity']
+            tX[j-1][2] = tmp['convex_area']
+            tX[j-1][3] = tmp['area']
         X = np.vstack([X, tX]) if X.size else tX
     return X
 
@@ -119,10 +125,11 @@ def equalize_volume(volume):
 
 def main():
     print "Getting raw data..."
-    mito_img = getRaw(ndio = True)
+    mito_img = getRaw(db = False)
 
     print "Getting annotations..."
-    mito_anno = getTruth(ndio = True)
+    mito_anno = getTruth(db = False)
+    
 
     n_rows = len(mito_img[0])
     n_cols = len(mito_img[0][0])
@@ -133,12 +140,11 @@ def main():
     threshold = float(sys.argv[3]) # gradient threshold for threshold cut
 
     # Implementing histogram equalization for better contrast!
-    train = equalize_volume(mito_img[100:149])
-    test = equalize_volume(mito_img[97:100])
+    train = equalize_volume(mito_img[70:150])
+    test = equalize_volume(mito_img[30:70])
 
-    train_truth = mito_anno[100:149]
-    test_truth = mito_anno[97:100]
-
+    train_truth = mito_anno[70:150]
+    test_truth = mito_anno[30:70]
     train_labels = smartDownSample(train, n_segments, compactness, threshold) 
     test_labels = smartDownSample(test, n_segments, compactness, threshold)
 
@@ -148,23 +154,23 @@ def main():
     X_train = extract_features(train, train_labels)
     y_train = extract_classes(train_truth, train_labels)
     X_test = extract_features(test, test_labels)
-    print len(X_train), len(y_train), len(X_test)
 
     print "Initializing random forest..."
-    forest = skl.RandomForestClassifier(max_depth = 10)
+    forest = skl.RandomForestClassifier(n_estimators = 200, max_depth = 100, verbose = 3)
 
     print "Learning random forest..."
     forest.fit(X_train, y_train)
 
     print "Making predictions..."
     y_guess = forest.predict(X_test)
-
     print "Showing images..."
+
     j = 0
+
+    y_pred = np.zeros(test_labels.shape)
     for i in range(len(test_labels)):
-        img = np.empty(test_labels[i].shape)
         for k in range(1, test_labels[i].max()):
-            img[test_labels[i] == k] = y_guess[j]
+            y_pred[i][test_labels[i] == k] = y_guess[j]
             j = j + 1
         toimage(test[i]).show()
         label_img = np.empty(test_labels[i].shape)
@@ -172,9 +178,10 @@ def main():
             props = measure.regionprops(test_labels[i], intensity_image = test[i])
             label_img[test_labels[i] == g] = props[g - 1]['mean_intensity']
         toimage(label_img).show()
-        toimage(img).show()
+        toimage(y_pred[i]).show()
         toimage(test_truth[i]).show()
-        print j
+    np.save('actual.npy', X_test)
+    np.save('predicted.npy', y_pred)
 #    y_guess_imgs = np.empty(test.shape)
 #    for index in np.ndindex(test.shape):
 #        y_guess_imgs[index] = y_guess[test_labels[index] - 1]
