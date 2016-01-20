@@ -63,24 +63,25 @@ def writeConfig(xyTuple):
 	
 
 def main():
-	writeConfig(getCutValues())
-	#print('Retrieving numpy array...')
-	#mito_anno = getTruth(694, 1794, 1750, 2640, 1004, 1154)
-	#print('Converting numpy array to uint8')
-	#mito_anno = convertToType(mito_anno, "uint8")
+	#writeConfig(getCutValues())
+	print('Retrieving numpy array...')
+	mito_anno = getTruth(694, 1794, 1750, 2640, 1004, 1154)
+	#mito_img = getRaw(694, 1794, 1750, 2640, 1004, 1154)
+	print('Converting numpy array to uint8')
+	mito_anno = convertToType(mito_anno, "uint8")
 
-	#mito_anno = visualThreshold(mito_anno, 255)
+	mito_anno = visualThreshold(mito_anno, 255)
 	
-	#indices = getIndices(255, mito_anno, "equal")
-	#xMin, xMax, yMin, yMax = getxyMinMax(indices)
-	#print(xMin,xMax,yMin,yMax)
+	indices = getIndices(255, mito_anno, "equal")
+	xMin, xMax, yMin, yMax = getxyMinMax(indices)
+	print(xMin,xMax,yMin,yMax)
 	
-	#oo=OCP()
-	#rip = oo.get_cutout('kasthuri2015_ramon_v1', 'mitochondria', 694+xMin, 694+xMax, 1750+yMin, 1750+yMax, 1004, 1154, resolution=3)
-	#rip = convertToType(rip, 'uint8')
-	#rip = visualThreshold(rip, 255)
+	oo=OCP()
+	rip = oo.get_cutout('kasthuri2015_ramon_v1', 'mitochondria', 694+xMin, 694+xMax, 1750+yMin, 1750+yMax, 1004, 1154, resolution=3)
+	rip = convertToType(rip, 'uint8')
+	rip = visualThreshold(rip, 255)
 
-	#print('Converting to png...')
-	#convertToPNG(rip,'data/improved_annotations/improved_mito_anno_*')
+	print('Converting to png...')
+	convertToPNG(rip,'data/improved_annotations/improved_mito_anno_*')
 if __name__ == '__main__':
     main()
