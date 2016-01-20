@@ -141,47 +141,56 @@ def main():
 
     # Implementing histogram equalization for better contrast!
     train = equalize_volume(mito_img[70:150])
-    test = equalize_volume(mito_img[30:70])
+    test = equalize_volume(mito_img[30:35])
 
     train_truth = mito_anno[70:150]
-    test_truth = mito_anno[30:70]
-    train_labels = smartDownSample(train, n_segments, compactness, threshold) 
-    test_labels = smartDownSample(test, n_segments, compactness, threshold)
+    test_truth = mito_anno[30:35]
 
-   # demo(mito_img[70], n_segments, compactness, threshold)
+    nri = 6
 
-    print "Processing features..."
-    X_train = extract_features(train, train_labels)
-    y_train = extract_classes(train_truth, train_labels)
-    X_test = extract_features(test, test_labels)
+    y_pred = [0] * nri
+    for k in range(nri):
+        r1, r2, r3 = random.randrange(-100, 100), random.uniform(-.1, .1,), random.uniform(-.05, .05)
+        train_labels = smartDownSample(train, n_segments + r1, compactness + r2, threshold + r3) 
+        test_labels = smartDownSample(test, n_segments + r1, compactness + r2, threshold + r3)
 
-    print "Initializing random forest..."
-    forest = skl.RandomForestClassifier(n_estimators = 200, max_depth = 100, verbose = 3)
+       # demo(mito_img[70], n_segments, compactness, threshold)
 
-    print "Learning random forest..."
-    forest.fit(X_train, y_train)
+        print "Processing features..."
+        X_train = extract_features(train, train_labels)
+        y_train = extract_classes(train_truth, train_labels)
+        X_test = extract_features(test, test_labels)
 
-    print "Making predictions..."
-    y_guess = forest.predict(X_test)
+
+        print "Initializing random forest..."
+        forest = skl.RandomForestClassifier(n_estimators = 200, max_depth = 100, verbose = 3)
+
+        print "Learning random forest..."
+        forest.fit(X_train, y_train)
+
+        print "Making predictions..."
+        y_guess = forest.predict(X_test)
+
+        j = 0
+        y_pred[k] = np.zeros(test_labels.shape)
+        for i in range(len(test_labels)):
+            for g in range(1, test_labels[i].max()):
+                y_pred[k][i][test_labels[i] == g] = y_guess[j]
+                j = j + 1
+
     print "Showing images..."
-
-    j = 0
-
-    y_pred = np.zeros(test_labels.shape)
+    y_pred_or = np.logical_or.reduce(y_pred)
     for i in range(len(test_labels)):
-        for k in range(1, test_labels[i].max()):
-            y_pred[i][test_labels[i] == k] = y_guess[j]
-            j = j + 1
         toimage(test[i]).show()
         label_img = np.empty(test_labels[i].shape)
         for g in range(test_labels[i].max()):
             props = measure.regionprops(test_labels[i], intensity_image = test[i])
             label_img[test_labels[i] == g] = props[g - 1]['mean_intensity']
+        toimage(y_pred_or[i]).show()
         toimage(label_img).show()
-        toimage(y_pred[i]).show()
         toimage(test_truth[i]).show()
-    np.save('actual.npy', X_test)
-    np.save('predicted.npy', y_pred)
+#    np.save('actual.npy', X_test)
+#    np.save('predicted.npy', y_pred_or)
 #    y_guess_imgs = np.empty(test.shape)
 #    for index in np.ndindex(test.shape):
 #        y_guess_imgs[index] = y_guess[test_labels[index] - 1]
