@@ -72,7 +72,7 @@ def getRaw(db = False):
     # Careful of hardcoded filepath    
     if db == False:
         vol = np.array([])
-        data = ndio.convert.png.import_png_collection('newdata/mito_data_*')
+        data = ndio.convert.png.import_png_collection('bestdata/mito_data_*')
         for img in data:
             vol = np.dstack([vol, img]) if vol.size else img
         return vol
@@ -87,7 +87,7 @@ def getTruth(db = False):
     # Careful of hardcoded filepath    
     if db == False:
         vol = np.array([])
-        data = ndio.convert.png.import_png_collection('newdata/mito_anno_*')
+        data = ndio.convert.png.import_png_collection('bestdata/mito_anno_*')
         for img in data:
             vol = np.dstack([vol, img]) if vol.size else img
         return vol
