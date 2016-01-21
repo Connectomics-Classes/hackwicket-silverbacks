@@ -9,37 +9,11 @@ from scipy.misc import toimage
 import rag2 as graph_custom # edited skimage.future.graph module
 import cutImageNAnnotations as cutImg
 
-def demo(img, nsegs, compactness, threshold):
-    # Segment using SLIC
-    labels = segmentation.slic(img, nsegs, compactness, multichannel = False, enforce_connectivity = True)
-    # Make a Region Adjacency Graph of the segmentation
-    rag = graph_custom.rag_mean_int(img, labels)
-    # Cut this RAG based on threshold
-    new_labels = graph.cut_threshold(labels, rag, threshold)
-    # Make a new graph based on the new segmentation (post cut)
-    # not using right now... rag = graph_custom.rag_mean_int(img, new_labels)
-    # Average the pixel color in every segmented region, into new_img
-    nsegs = len(np.unique(new_labels))
-    counts = np.zeros([nsegs])
-    totals = np.zeros([nsegs])
-    for (x,y), val in np.ndenumerate(new_labels):
-        counts[val] += 1
-        totals[val] += img[x][y]
-    averages = np.floor(np.divide(totals, counts))
-    new_img = np.empty([len(img), len(img[0])])
-    for (x,y), val in np.ndenumerate(new_labels):
-        new_img[x][y] = averages[val]
-    # Show the images
-    toimage(img).show()
-    print "Original Image"
-    slic_img = segmentation.mark_boundaries(new_img, labels)
-    toimage(slic_img).show()
-    print "Image after only SLIC algorithm"
-    seg_img = segmentation.mark_boundaries(new_img, new_labels)
-    print "Image after threshold cut"
-    toimage(seg_img).show()
-
-
+# Input: vol - the 3D image volume
+#        nsegs - approx. number of superpixels to create
+#        compactness - weight of spatial distance in SLIC (as opposed to intensity distance)
+#        threshold - graph cutting threshold (0 to 1)
+# Output: volume of labels assigned to different objects in images
 def smartDownSample(vol, nsegs, compactness, threshold):
     label_vol = np.empty(vol.shape)
     for i in range(len(vol)):
@@ -67,12 +41,13 @@ def getConfig():
 		cutImg.writeConfig(maxes) #creates config.py
 		return maxes
 		
-
+# Input: db - True if pulling data directly from ndio, False if local
+# Output: the raw image volume
 def getRaw(db = False):
     # Careful of hardcoded filepath    
     if db == False:
         vol = np.array([])
-        data = ndio.convert.png.import_png_collection('bestdata/mito_data_*')
+        data = ndio.convert.png.import_png_collection('newdata/mito_data_*')
         for img in data:
             vol = np.dstack([vol, img]) if vol.size else img
         return vol
@@ -83,11 +58,13 @@ def getRaw(db = False):
 		return oo.get_cutout('kasthuri11cc', 'image', 694 + boundaries[0], 694 + boundaries[1], 1750 + boundaries[2], 1750 + boundaries[3], 1004+13, 1154, resolution = 3) 
 
 
+# Input: db - True if pulling data directly from ndio, False if local
+# Output: the annotation volume
 def getTruth(db = False):
     # Careful of hardcoded filepath    
     if db == False:
         vol = np.array([])
-        data = ndio.convert.png.import_png_collection('bestdata/mito_anno_*')
+        data = ndio.convert.png.import_png_collection('newdata/mito_anno_*')
         for img in data:
             vol = np.dstack([vol, img]) if vol.size else img
         return vol
@@ -98,6 +75,9 @@ def getTruth(db = False):
 		return oo.get_cutout('kasthuri2015_ramon_v1', 'mitochondria', 694 + boundaries[0], 694 + boundaries[1], 1750 + boundaries[2], 1750 + boundaries[3], 1004+13, 1154, resolution = 3)
 
 
+# Input: im_vol - the image volume of EM data
+#        label_vol - the labels given to objects in EM data (from smartDownSample) 
+# Output: the feature array X
 def extract_features(im_vol, label_vol):
     n_features = 4
     X = np.array([])
@@ -116,7 +96,9 @@ def extract_features(im_vol, label_vol):
         X = np.vstack([X, tX]) if X.size else tX
     return X
 
-
+# Input: im_vol - the image volume of EM data
+#        label_vol - the labels given to objects in EM data (from smartDownSample)
+# Output: a vector of the classes (mito or not mito) given to each object (according to label_vol)
 def extract_classes(im_vol, label_vol):
     y = np.zeros([0,])
     if len(im_vol) != len(label_vol):
@@ -132,7 +114,8 @@ def extract_classes(im_vol, label_vol):
                 y = np.append(y, 0)
     return y
 
-
+# Input: volume - an image volume
+# Output: the image volume after histogram equalization
 def equalize_volume(volume):
     for ra in volume:
         ra = (np.floor(exposure.equalize_hist(ra) * 256)).astype('uint8')
@@ -151,26 +134,23 @@ def main():
     n_cols = len(mito_img[0][0])
 
     print "Initializing oversegmentation / threshold cutting algorithm..."
-    n_segments = int(sys.argv[1]) # (approx) the number of superpixels from SLIC
-    compactness = float(sys.argv[2]) # how much SLIC favors shape vs color (high = more square)
-    threshold = float(sys.argv[3]) # gradient threshold for threshold cut
+    n_segments = int(sys.argv[1])
+    compactness = float(sys.argv[2])
+    threshold = float(sys.argv[3])
 
-    # Implementing histogram equalization for better contrast!
     train = equalize_volume(mito_img[70:150])
-    test = equalize_volume(mito_img[30:35])
+    test = equalize_volume(mito_img[30:70])
 
     train_truth = mito_anno[70:150]
-    test_truth = mito_anno[30:35]
+    test_truth = mito_anno[30:70]
 
-    nri = 6
-
+    nri = int(sys.argv[4])
     y_pred = [0] * nri
+
     for k in range(nri):
         r1, r2, r3 = random.randrange(-100, 100), random.uniform(-.1, .1,), random.uniform(-.05, .05)
         train_labels = smartDownSample(train, n_segments + r1, compactness + r2, threshold + r3) 
         test_labels = smartDownSample(test, n_segments + r1, compactness + r2, threshold + r3)
-
-       # demo(mito_img[70], n_segments, compactness, threshold)
 
         print "Processing features..."
         X_train = extract_features(train, train_labels)
@@ -179,7 +159,7 @@ def main():
 
 
         print "Initializing random forest..."
-        forest = skl.RandomForestClassifier(n_estimators = 200, max_depth = 100, verbose = 3)
+        forest = skl.RandomForestClassifier(n_estimators = 200, max_depth = 100)
 
         print "Learning random forest..."
         forest.fit(X_train, y_train)
@@ -187,6 +167,7 @@ def main():
         print "Making predictions..."
         y_guess = forest.predict(X_test)
 
+        # Move from prediction vector to prediction pictures
         j = 0
         y_pred[k] = np.zeros(test_labels.shape)
         for i in range(len(test_labels)):
@@ -194,26 +175,21 @@ def main():
                 y_pred[k][i][test_labels[i] == g] = y_guess[j]
                 j = j + 1
 
-    print "Showing images..."
+#    print "Showing images..."
     y_pred_or = np.logical_or.reduce(y_pred)
-    for i in range(len(test_labels)):
-        toimage(test[i]).show()
-        label_img = np.empty(test_labels[i].shape)
-        for g in range(test_labels[i].max()):
-            props = measure.regionprops(test_labels[i], intensity_image = test[i])
-            label_img[test_labels[i] == g] = props[g - 1]['mean_intensity']
-        toimage(y_pred_or[i]).show()
-        toimage(label_img).show()
-        toimage(test_truth[i]).show()
-#    np.save('actual.npy', X_test)
-#    np.save('predicted.npy', y_pred_or)
-#    y_guess_imgs = np.empty(test.shape)
-#    for index in np.ndindex(test.shape):
-#        y_guess_imgs[index] = y_guess[test_labels[index] - 1]
-#    y_guess_imgs[ y_guess_img > 0 ] = 255 
-#    print "Showing true img..."
-#    for img in y_guess_imgs:
-#        toimage(img).show()
+#    for i in range(len(test_labels)):
+#        toimage(test[i]).show()
+#        label_img = np.empty(test_labels[i].shape)
+#        for g in range(test_labels[i].max()):
+#            props = measure.regionprops(test_labels[i], intensity_image = test[i])
+#            label_img[test_labels[i] == g] = props[g - 1]['mean_intensity']
+#        toimage(y_pred_or[i]).show()
+#        toimage(label_img).show()
+#        toimage(test_truth[i]).show()
+    np.save('actual.npy', test)
+    print X_test.shape
+    np.save('predicted.npy', y_pred_or)
+    print y_pred_or.shape
         
 
 if __name__ == '__main__':
