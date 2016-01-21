@@ -55,7 +55,7 @@ def getRaw(db = False):
 		boundaries = getConfig()
 		oo = OCP()
 		#added +12 because first 10 images in stack aren't even annotated
-		return oo.get_cutout('kasthuri11cc', 'image', 694 + boundaries[0], 694 + boundaries[1], 1750 + boundaries[2], 1750 + boundaries[3], 1004+13, 1154, resolution = 3) 
+		return oo.get_cutout('kasthuri11cc', 'image', 694 + boundaries[0], 694 + boundaries[1], 1750 + boundaries[2], 1750 + boundaries[3], 1004, 1154, resolution = 3) 
 
 
 # Input: db - True if pulling data directly from ndio, False if local
@@ -72,7 +72,7 @@ def getTruth(db = False):
 		boundaries = getConfig()
 		oo = OCP()
 		#added +12 because first 10 images in stack aren't even annotated
-		return oo.get_cutout('kasthuri2015_ramon_v1', 'mitochondria', 694 + boundaries[0], 694 + boundaries[1], 1750 + boundaries[2], 1750 + boundaries[3], 1004+13, 1154, resolution = 3)
+		return oo.get_cutout('kasthuri2015_ramon_v1', 'mitochondria', 694 + boundaries[0], 694 + boundaries[1], 1750 + boundaries[2], 1750 + boundaries[3], 1004, 1154, resolution = 3)
 
 
 # Input: im_vol - the image volume of EM data
