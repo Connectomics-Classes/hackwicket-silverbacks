@@ -1,12 +1,7 @@
-from skimage import draw, measure, segmentation, util, color, exposure
 import sys, random
 import numpy as np
 import ndio.convert.png
 import ndio.remote.OCP as OCP
-import sklearn.ensemble as skl
-from skimage.future import graph
-from scipy.misc import toimage
-import rag2 as graph_custom # edited skimage.future.graph module
 
 import cutImageNAnnotations as cutImg
 
@@ -34,7 +29,7 @@ def getRaw(db = False):
 		boundaries = getConfig()
 		oo = OCP()
 		#added +12 because first 10 images in stack aren't even annotated
-		return oo.get_cutout('kasthuri11cc', 'image', 694 + boundaries[0], 694 + boundaries[1], 1750 + boundaries[2], 1750 + boundaries[3], 1004+13, 1154, resolution = 3) 
+		return oo.get_cutout('kasthuri11cc', 'image', 694 + boundaries[0], 694 + boundaries[1], 1750 + boundaries[2], 1750 + boundaries[3], 1004, 1154, resolution = 3) 
 
 
 def getTruth(db = False):
@@ -49,15 +44,15 @@ def getTruth(db = False):
 		boundaries = getConfig()
 		oo = OCP()
 		#added +12 because first 10 images in stack aren't even annotated
-		return oo.get_cutout('kasthuri2015_ramon_v1', 'mitochondria', 694 + boundaries[0], 694 + boundaries[1], 1750 + boundaries[2], 1750 + boundaries[3], 1004+13, 1154, resolution = 3)
+		return oo.get_cutout('kasthuri2015_ramon_v1', 'mitochondria', 694 + boundaries[0], 694 + boundaries[1], 1750 + boundaries[2], 1750 + boundaries[3], 1004, 1154, resolution = 3)
 
 def main():
 	print("Retrieving data")
 	mito_img = getRaw(db=True)
 	mito_anno = getTruth(db=True)
 	
-	#mito_anno = cutImg.convertToType(mito_anno, 'uint8') #uncomment when testing
-	#mito_anno = cutImg.visualThreshold(mito_anno, 255) #uncomment when testing
+	mito_anno = cutImg.convertToType(mito_anno, 'uint8') #uncomment/comment if you want to visually threshold the annotated mitochondr images
+	mito_anno = cutImg.visualThreshold(mito_anno, 255) #uncomment/comment if you want to visually threshold the annotated mitochondr images
 
 	print('Converting to png...')
 	cutImg.convertToPNG(mito_anno,'bestdata/mito_anno_*')
