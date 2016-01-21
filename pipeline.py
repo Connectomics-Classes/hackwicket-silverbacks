@@ -190,6 +190,7 @@ def main():
     np.save('actual.npy', test)
     print X_test.shape
     np.save('predicted.npy', y_pred_or)
+    np.save('truth.npy', test_truth)
     print y_pred_or.shape
         
 
