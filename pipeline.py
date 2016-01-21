@@ -9,6 +9,7 @@ from scipy.misc import toimage
 import rag2 as graph_custom # edited skimage.future.graph module
 import cutImageNAnnotations as cutImg
 
+
 # Input: vol - the 3D image volume
 #        nsegs - approx. number of superpixels to create
 #        compactness - weight of spatial distance in SLIC (as opposed to intensity distance)
