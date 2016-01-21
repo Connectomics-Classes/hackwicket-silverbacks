@@ -1,0 +1,116 @@
+% !TEX TS-program = pdflatex
+% !TEX encoding = UTF-8 Unicode
+
+% This is a simple template for a LaTeX document using the "article" class.
+% See "book", "report", "letter" for other types of document.
+
+\documentclass[11pt]{article} % use larger type; default would be 10pt
+\usepackage{graphicx}
+\graphicspath{ {images/} }
+\usepackage[utf8]{inputenc} % set input encoding (not needed with XeLaTeX)
+
+
+%%% PAGE DIMENSIONS
+\usepackage{geometry} % to change the page dimensions
+\geometry{a4paper} % or letterpaper (US) or a5paper or....
+
+
+\usepackage{graphicx} % support the \includegraphics command and options
+
+% \usepackage[parfill]{parskip} % Activate to begin paragraphs with an empty line rather than an indent
+
+%%% PACKAGES
+\usepackage{booktabs} % for much better looking tables
+\usepackage{array} % for better arrays (eg matrices) in maths
+\usepackage{paralist} % very flexible & customisable lists (eg. enumerate/itemize, etc.)
+\usepackage{verbatim} % adds environment for commenting out blocks of text & for better verbatim
+\usepackage{subfig} % make it possible to include more than one captioned figure/table in a single float
+\usepackage{cite}
+% These packages are all incorporated in the memoir class to one degree or another...
+
+%%% HEADERS & FOOTERS
+\usepackage{fancyhdr} % This should be set AFTER setting up the page geometry
+\pagestyle{fancy} % options: empty , plain , fancy
+\renewcommand{\headrulewidth}{0pt} % customise the layout...
+\lhead{}\chead{}\rhead{}
+\lfoot{}\cfoot{\thepage}\rfoot{}
+
+%%% SECTION TITLE APPEARANCE
+\usepackage{sectsty}
+\allsectionsfont{\sffamily\mdseries\upshape} % (See the fntguide.pdf for font help)
+% (This matches ConTeXt defaults)
+
+%%% ToC (table of contents) APPEARANCE
+\usepackage[nottoc,notlof,notlot]{tocbibind} % Put the bibliography in the ToC
+\usepackage[titles,subfigure]{tocloft} % Alter the style of the Table of Contents
+\renewcommand{\cftsecfont}{\rmfamily\mdseries\upshape}
+\renewcommand{\cftsecpagefont}{\rmfamily\mdseries\upshape} % No bold!
+
+
+
+\title{Mapping the Brain: An Introduction to Connectomics\\Segmenting Mitochondria from EM Image Stacks}
+\author{Ryan Marren, Brandon Duderstadt, and Eric Huang}
+%\date{} % Activate to display a given date or no date (if empty),
+         % otherwise the current date is printed 
+
+\begin{document}
+\maketitle
+
+\section{Abstract}
+
+Current research suggests that the location and shape of mitochondria are important to neural function, and large amounts of EM data is available to segment mitochondria from [1]. However, current segmentation algorithms do not work well with mitochondria because of the sheer size of the EM volumes and the amount of noise in the EM data [1]. 
+Thus, our team built a pipeline to segment mitochondria consisting of three parts: first, we pre-cut the EM image and annotation volume; second, we segmented the images using SLIC superpixels and applied a random forest machine learning algorithm to classify and detect mitochondria [1,3]; finally, we used the output data to build a 3D model of the mitochondria [2].
+We found that our method had both low detection and false positive rates. In the future, our project could be improved upon by optimizing the segmentation algorithm and cleaning up the 3D model so that mitochondria are coherently displayed.
+
+\section{Results}
+
+After running our pipeline, we calculated how effective it was at segmenting mitochondria. We found that generally there was a 40\% true detection rate of mitochondria and a 10\% false positive rate (Figure 1). Based on this, we can infer that our method has both low detection and low false positive rates. Because of time limitations, we were not able to calculate precision and recall for each image, but we found that by manually evaluating one image, the precision was 0.5 and the recall was 0.46. While these precision/recall values are not representative of the whole image volume, even these two values corrobate our earlier inferences that the detection rate is low and false positive rate is relatively low. In the future, we hope to continue post-processing statistical analysis in order to determine the effectiveness of our pipeline.
+
+\section{References}
+\lbrack1\rbrack: Lucchi, Smith, Achanta, Knott, Fua "Supervoxel Based Segmentation of mitochondria in EM Image Stacks With Learned Shape Features"\\
+\lbrack2\rbrack: Ramachandran, P. and Varoquaux, G., Mayavi: 3D Visualization of Scientific Data` IEEE Computing in Science and Engineering, 13 (2), pp. 40-51 (2011)\\
+\lbrack3\rbrack: L. Breiman. Random forests. ML Journal, 45(1):5–32, 2001. \\
+
+\section{Appendix}
+
+\begin{figure}[!htb]
+\minipage{0.32\textwidth}
+  \includegraphics[width=\linewidth]{Results}
+  \caption{True/false positive detection graph}\label{fig:awesome_image1}
+\endminipage\hfill
+\minipage{0.32\textwidth}
+  \includegraphics[width=\linewidth]{pmito}
+  \caption{Segmented mitochondria as predicted by pipeline}\label{fig:awesome_image2}
+\endminipage\hfill
+\minipage{0.32\textwidth}%
+  \includegraphics[width=\linewidth]{truth}
+  \caption{Truth data of mitochondria as annotated by expert}\label{fig:awesome_image3}
+\endminipage
+\end{figure}
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
