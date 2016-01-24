@@ -1,4 +1,4 @@
-from skimage import draw, measure, segmentation, util, color, exposure
+from skimage import draw, measure, segmentation, util, color, exposure, filters
 import sys, random
 import numpy as np
 import ndio.convert.png
@@ -80,7 +80,7 @@ def getTruth(db = False):
 #        label_vol - the labels given to objects in EM data (from smartDownSample) 
 # Output: the feature array X
 def extract_features(im_vol, label_vol):
-    n_features = 4
+    n_features = 2
     X = np.array([])
     if len(im_vol) != len(label_vol):
         print 'volumes not the same z dimension'
@@ -91,23 +91,21 @@ def extract_features(im_vol, label_vol):
         for j in range(1, label_vol[i].max()):
             tmp = props[j-1]
             tX[j-1][0] = tmp['mean_intensity'] 
-            tX[j-1][1] = tmp['eccentricity']
-            tX[j-1][2] = tmp['convex_area']
-            tX[j-1][3] = tmp['area']
+            tX[j-1][1] = tmp['area']
         X = np.vstack([X, tX]) if X.size else tX
     return X
 
-# Input: im_vol - the image volume of EM data
+# Input: truth_vol - the truth volume of EM data
 #        label_vol - the labels given to objects in EM data (from smartDownSample)
 # Output: a vector of the classes (mito or not mito) given to each object (according to label_vol)
-def extract_classes(im_vol, label_vol):
+def extract_classes(truth_vol, label_vol):
     y = np.zeros([0,])
-    if len(im_vol) != len(label_vol):
+    if len(truth_vol) != len(label_vol):
         print 'volumes not the same z dimension'
-    for i in range(len(im_vol)):
+    for i in range(len(truth_vol)):
         n_samples = label_vol[i].max()
-        im_vol[i][im_vol[i] > 0] = 255
-        props = measure.regionprops(label_vol[i], intensity_image = im_vol[i])
+        truth_vol[i][truth_vol[i] > 0] = 255
+        props = measure.regionprops(label_vol[i], intensity_image = truth_vol[i])
         for j in range(1, label_vol[i].max()):
             if props[j-1]['mean_intensity'] > 150:
                 y = np.append(y, 1)
@@ -117,11 +115,17 @@ def extract_classes(im_vol, label_vol):
 
 # Input: volume - an image volume
 # Output: the image volume after histogram equalization
-def equalize_volume(volume):
-    for ra in volume:
-        ra = (np.floor(exposure.equalize_hist(ra) * 256)).astype('uint8')
+def smooth_volume(volume):
+    for i in range(len(volume)):
+        volume[i] = (np.floor(filters.gaussian_filter(volume[i], .5) * 256)).astype('uint8')
     return volume
-        
+
+
+def calculate_precision_recall(pred_vol, truth_vol):
+    both = np.logical_and(pred_vol > 0, truth_vol > 0) 
+    precision = len(both[both]) / float(len(pred_vol[pred_vol > 0]))
+    recall = len(both[both]) / float(len(truth_vol[truth_vol > 0]))
+    return (precision,recall)
 
 def main():
     print "Getting raw data..."
@@ -139,17 +143,20 @@ def main():
     compactness = float(sys.argv[2])
     threshold = float(sys.argv[3])
 
-    train = equalize_volume(mito_img[70:150])
-    test = equalize_volume(mito_img[30:70])
+    train = smooth_volume(mito_img[70:150])
+    test = smooth_volume(mito_img[50:70])
 
     train_truth = mito_anno[70:150]
-    test_truth = mito_anno[30:70]
+    test_truth = mito_anno[50:70]
 
     nri = int(sys.argv[4])
     y_pred = [0] * nri
 
     for k in range(nri):
-        r1, r2, r3 = random.randrange(-100, 100), random.uniform(-.1, .1,), random.uniform(-.05, .05)
+        if nri != 1:
+            r1, r2, r3 = random.randrange(-100, 100), random.uniform(-.1, .1,), random.uniform(-.05, .05)
+        else:
+            r1, r2, r3 = 0, 0, 0
         train_labels = smartDownSample(train, n_segments + r1, compactness + r2, threshold + r3) 
         test_labels = smartDownSample(test, n_segments + r1, compactness + r2, threshold + r3)
 
@@ -178,20 +185,19 @@ def main():
 
 #    print "Showing images..."
     y_pred_or = np.logical_or.reduce(y_pred)
-#    for i in range(len(test_labels)):
-#        toimage(test[i]).show()
-#        label_img = np.empty(test_labels[i].shape)
-#        for g in range(test_labels[i].max()):
-#            props = measure.regionprops(test_labels[i], intensity_image = test[i])
-#            label_img[test_labels[i] == g] = props[g - 1]['mean_intensity']
-#        toimage(y_pred_or[i]).show()
-#        toimage(label_img).show()
-#        toimage(test_truth[i]).show()
+    print calculate_precision_recall(y_pred_or, test_truth)
+    for i in range(3):
+        toimage(test[i]).show()
+        label_img = np.empty(test_labels[i].shape)
+        for g in range(test_labels[i].max()):
+            props = measure.regionprops(test_labels[i], intensity_image = test[i])
+            label_img[test_labels[i] == g] = props[g - 1]['mean_intensity']
+        toimage(y_pred_or[i]).show()
+        toimage(label_img).show()
+        toimage(test_truth[i]).show()
     np.save('actual.npy', test)
-    print X_test.shape
     np.save('predicted.npy', y_pred_or)
     np.save('truth.npy', test_truth)
-    print y_pred_or.shape
         
 
 if __name__ == '__main__':
