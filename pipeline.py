@@ -80,7 +80,7 @@ def getTruth(db = False):
 #        label_vol - the labels given to objects in EM data (from smartDownSample) 
 # Output: the feature array X
 def extract_features(im_vol, label_vol):
-    n_features = 2
+    n_features = 8
     X = np.array([])
     if len(im_vol) != len(label_vol):
         print 'volumes not the same z dimension'
@@ -92,6 +92,14 @@ def extract_features(im_vol, label_vol):
             tmp = props[j-1]
             tX[j-1][0] = tmp['mean_intensity'] 
             tX[j-1][1] = tmp['area']
+            tX[j-1][2] = tmp['extent']
+            tX[j-1][3] = tmp['max_intensity']
+            tX[j-1][4] = tmp['min_intensity']
+            tX[j-1][5] = tmp['solidity']
+            e1, e2 = tmp['inertia_tensor_eigvals']
+            tX[j-1][6] = e1
+            tX[j-1][7] = e2
+            
         X = np.vstack([X, tX]) if X.size else tX
     return X
 
