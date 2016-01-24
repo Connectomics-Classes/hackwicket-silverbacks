@@ -151,11 +151,11 @@ def main():
     compactness = float(sys.argv[2])
     threshold = float(sys.argv[3])
 
-    train = smooth_volume(mito_img[70:150])
-    test = smooth_volume(mito_img[50:70])
+    train = smooth_volume(mito_img[50:150])
+    test = smooth_volume(mito_img[30:50])
 
-    train_truth = mito_anno[70:150]
-    test_truth = mito_anno[50:70]
+    train_truth = mito_anno[50:150]
+    test_truth = mito_anno[30:50]
 
     nri = int(sys.argv[4])
     y_pred = [0] * nri
