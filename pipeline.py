@@ -131,11 +131,13 @@ def smooth_volume(volume):
 
 def calculate_precision_recall(pred_vol, truth_vol):
     both = np.logical_and(pred_vol > 0, truth_vol > 0) 
+    #precision = True Positive / (True Positive+False Positive)
     precision = len(both[both]) / float(len(pred_vol[pred_vol > 0]))
+    #recall = True Positive / (True Positive+False Negative)
     recall = len(both[both]) / float(len(truth_vol[truth_vol > 0]))
     return (precision,recall)
 
-def main():
+def main(n_segments, compactness, threshold):
     print "Getting raw data..."
     mito_img = getRaw(db = False)
 
@@ -147,9 +149,9 @@ def main():
     n_cols = len(mito_img[0][0])
 
     print "Initializing oversegmentation / threshold cutting algorithm..."
-    n_segments = int(sys.argv[1])
-    compactness = float(sys.argv[2])
-    threshold = float(sys.argv[3])
+    n_segments = int(n_segments)
+    compactness = float(compactness)
+    threshold = float(threshold)
 
     train = smooth_volume(mito_img[50:150])
     test = smooth_volume(mito_img[30:50])
@@ -192,7 +194,7 @@ def main():
                 j = j + 1
 
 #    print "Showing images..."
-    y_pred_or = np.logical_or.reduce(y_pred)
+    y_pred_or = np.logical_or.reduce(y_pred) #adds all the images together
     print calculate_precision_recall(y_pred_or, test_truth)
     for i in range(3):
         toimage(test[i]).show()
@@ -209,4 +211,4 @@ def main():
         
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main(sys.argv[1], sys.argv[2], sys.argv[3]))
