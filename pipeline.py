@@ -213,9 +213,9 @@ def main(n_segments, compactness, threshold, nri):
         #toimage(test_truth[i]).show()
     
     #save arrays to file
-    #np.save('actual.npy', test)
-    #np.save('predicted.npy', y_pred_or)
-    #np.save('truth.npy', test_truth)
+    np.save('actual.npy', test)
+    np.save('predicted.npy', y_pred_or)
+    np.save('truth.npy', test_truth)
         
 
 if __name__ == '__main__':
