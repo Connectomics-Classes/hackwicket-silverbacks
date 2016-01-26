@@ -195,19 +195,27 @@ def main(n_segments, compactness, threshold, nri):
 
 #    print "Showing images..."
     y_pred_or = np.logical_or.reduce(y_pred) #adds all the images together
-    print calculate_precision_recall(y_pred_or, test_truth)
-    for i in range(3):
-        toimage(test[i]).show()
-        label_img = np.empty(test_labels[i].shape)
-        for g in range(test_labels[i].max()):
-            props = measure.regionprops(test_labels[i], intensity_image = test[i])
-            label_img[test_labels[i] == g] = props[g - 1]['mean_intensity']
-        toimage(y_pred_or[i]).show()
-        toimage(label_img).show()
-        toimage(test_truth[i]).show()
-    np.save('actual.npy', test)
-    np.save('predicted.npy', y_pred_or)
-    np.save('truth.npy', test_truth)
+    pr = calculate_precision_recall(y_pred_or, test_truth)
+    #print(pr)
+    
+    parameters = (n_segments, compactness, threshold, nri)
+    return pr, parameters 
+    
+    #display images
+    #for i in range(3):
+        #toimage(test[i]).show()
+        #label_img = np.empty(test_labels[i].shape)
+        #for g in range(test_labels[i].max()):
+            #props = measure.regionprops(test_labels[i], intensity_image = test[i])
+            #label_img[test_labels[i] == g] = props[g - 1]['mean_intensity']
+        #toimage(y_pred_or[i]).show()
+        #toimage(label_img).show()
+        #toimage(test_truth[i]).show()
+    
+    #save arrays to file
+    #np.save('actual.npy', test)
+    #np.save('predicted.npy', y_pred_or)
+    #np.save('truth.npy', test_truth)
         
 
 if __name__ == '__main__':
