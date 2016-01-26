@@ -137,7 +137,7 @@ def calculate_precision_recall(pred_vol, truth_vol):
     recall = len(both[both]) / float(len(truth_vol[truth_vol > 0]))
     return (precision,recall)
 
-def main(n_segments, compactness, threshold):
+def main(n_segments, compactness, threshold, nri):
     print "Getting raw data..."
     mito_img = getRaw(db = False)
 
@@ -159,7 +159,7 @@ def main(n_segments, compactness, threshold):
     train_truth = mito_anno[50:150]
     test_truth = mito_anno[30:50]
 
-    nri = int(sys.argv[4])
+    nri = int(nri)
     y_pred = [0] * nri
 
     for k in range(nri):
@@ -211,4 +211,4 @@ def main(n_segments, compactness, threshold):
         
 
 if __name__ == '__main__':
-    sys.exit(main(sys.argv[1], sys.argv[2], sys.argv[3]))
+    sys.exit(main(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]))
